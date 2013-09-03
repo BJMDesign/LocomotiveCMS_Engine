@@ -1,62 +1,119 @@
-BJMLocomotivecms::Application.routes.draw do
-  
-  mount Locomotive::Engine => '/locomotive', as: 'locomotive' # you can change the value of the path, by default set to "/locomotive"
-      
+Locomotive::Engine.routes.draw do
 
-  # The priority is based upon order of creation:
-  # first created -> highest priority.
+  # authentication
+  devise_for :locomotive_account,
+    class_name:   'Locomotive::Account',
+    path:         '',
+    path_prefix:  nil,
+    failure_app:  'Locomotive::Devise::FailureApp',
+    controllers:  { sessions: 'locomotive/sessions', passwords: 'locomotive/passwords' }
 
-  # Sample of regular route:
-  #   match 'products/:id' => 'catalog#view'
-  # Keep in mind you can assign values other than :controller and :action
+  devise_scope :locomotive_account do
+    match '/'         => 'sessions#new'
+    delete 'signout'  => 'sessions#destroy', as: :destroy_locomotive_session
+  end
 
-  # Sample of named route:
-  #   match 'products/:id/purchase' => 'catalog#purchase', :as => :purchase
-  # This route can be invoked with purchase_url(:id => product.id)
+  root to: 'pages#index'
 
-  # Sample resource route (maps HTTP verbs to controller actions automatically):
-  #   resources :products
+  resources :pages do
+    put :sort, on: :member
+    get :get_path, on: :collection
+  end
 
-  # Sample resource route with options:
-  #   resources :products do
-  #     member do
-  #       get 'short'
-  #       post 'toggle'
-  #     end
-  #
-  #     collection do
-  #       get 'sold'
-  #     end
-  #   end
+  resources :snippets
 
-  # Sample resource route with sub-resources:
-  #   resources :products do
-  #     resources :comments, :sales
-  #     resource :seller
-  #   end
+  resources :sites
 
-  # Sample resource route with more complex sub-resources
-  #   resources :products do
-  #     resources :comments
-  #     resources :sales do
-  #       get 'recent', :on => :collection
-  #     end
-  #   end
+  resource :current_site, controller: 'current_site'
 
-  # Sample resource route within a namespace:
-  #   namespace :admin do
-  #     # Directs /admin/products/* to Admin::ProductsController
-  #     # (app/controllers/admin/products_controller.rb)
-  #     resources :products
-  #   end
+  resources :accounts
 
-  # You can have the root of your site routed with "root"
-  # just remember to delete public/index.html.
-  # root :to => 'welcome#index'
+  resource :my_account, controller: 'my_account' do
+    put :regenerate_api_key, on: :member
+  end
 
-  # See how all your routes lay out with "rake routes"
+  resources :memberships
 
-  # This is a legacy wild controller route that's not recommended for RESTful applications.
-  # Note: This route will make all actions in every controller accessible via GET requests.
-  # match ':controller(/:action(/:id))(.:format)'
+  resources :theme_assets do
+    get :all, action: 'index', on: :collection, defaults: { all: true }
+  end
+
+  resources :translations
+
+  resources :content_assets
+
+  resources :content_types
+
+  resources :content_entries, path: 'content_types/:slug/entries' do
+    put :sort,    on: :collection
+    get :export,  on: :collection
+  end
+
+  # installation guide
+  match '/installation'       => 'installation#show', defaults: { step: 1 }, as: :installation
+  match '/installation/:step' => 'installation#show', as: :installation_step
+
+end
+
+Rails.application.routes.draw do
+
+  # API
+  namespace :locomotive, module: 'locomotive' do
+    namespace :api do
+
+      resources :tokens, only: [:create, :destroy]
+
+      resource  :current_site, controller: 'current_site', only: [:show, :update, :destroy]
+
+      resources :memberships, only: [:index, :show, :create, :update, :destroy]
+
+      resource  :my_account, controller: 'my_account', only: :show
+
+      resources :accounts, only: [:index, :show, :create, :destroy]
+
+      with_options only: [:index, :show, :create, :update, :destroy] do |api|
+
+        api.resources :sites
+
+        api.resources :pages
+
+        api.resources :snippets
+
+        api.resources :content_types
+
+        api.resources :content_entries, path: 'content_types/:slug/entries'
+
+        api.resources :theme_assets
+
+        api.resources :translations
+
+        api.resources :content_assets
+      end
+    end
+  end
+
+  # sitemap
+  match '/sitemap.xml'  => 'locomotive/public/sitemaps#show', format: 'xml'
+
+  # robots.txt
+  match '/robots.txt'   => 'locomotive/public/robots#show', format: 'txt'
+
+  # public content entry submissions
+  resources :locomotive_entry_submissions, controller: 'locomotive/public/content_entries', path: 'entry_submissions/:slug'
+
+  # magic urls
+  match '/_admin'               => 'locomotive/public/pages#show_toolbar'
+  match ':locale/_admin'        => 'locomotive/public/pages#show_toolbar', locale: /(#{Locomotive.config.site_locales.join('|')})/
+  match ':locale/*path/_admin'  => 'locomotive/public/pages#show_toolbar', locale: /(#{Locomotive.config.site_locales.join('|')})/
+  match '*path/_admin'          => 'locomotive/public/pages#show_toolbar'
+
+  match '/_edit'                => 'locomotive/public/pages#edit'
+  match ':locale/_edit'         => 'locomotive/public/pages#edit', page_path: 'index', locale: /(#{Locomotive.config.site_locales.join('|')})/
+  match ':locale/*path/_edit'   => 'locomotive/public/pages#edit', locale: /(#{Locomotive.config.site_locales.join('|')})/
+  match '*path/_edit'           => 'locomotive/public/pages#edit'
+
+  root to:                      'locomotive/public/pages#show'
+  match ':locale'               => 'locomotive/public/pages#show', page_path: 'index', locale: /(#{Locomotive.config.site_locales.join('|')})/
+  match ':locale/*path'         => 'locomotive/public/pages#show', locale: /(#{Locomotive.config.site_locales.join('|')})/
+  match '*path'                 => 'locomotive/public/pages#show'
 end

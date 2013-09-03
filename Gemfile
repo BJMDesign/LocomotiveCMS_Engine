@@ -1,40 +1,63 @@
-source 'https://rubygems.org'
+#!/usr/bin/env bundle
+# encoding: utf-8
 
-gem 'rails', '~> 3.2.13'
+source "https://rubygems.org"
 
-gem 'locomotive_cms', '~> 2.2.1', :require => 'locomotive/engine'
-# gem 'locomotive_cms', :git => 'https://github.com/locomotivecms/engine.git', :branch => 'master', :require => 'locomotive/engine'
+gemspec # Include gemspec dependencies
 
-
-
-# Gems used only for assets and not required
-# in production environments by default.
 group :assets do
-  gem 'compass-rails',  '~> 1.0.2'
-  gem 'sass-rails',     '~> 3.2.4'
-  gem 'coffee-rails',   '~> 3.2.2'
-
-  # See https://github.com/sstephenson/execjs#readme for more supported runtimes
-  # gem 'therubyracer', :platforms => :ruby
-
-  gem 'uglifier', '>= 1.2.4'
+  gem 'sass-rails',   '~> 3.2.4'
+  gem 'coffee-rails', '~> 3.2.2'
+  gem 'uglifier',     '~> 1.2.4'
+  gem 'compass-rails'
 end
 
+# The rest of the dependencies are for use when in the locomotive development / test environments
 
+group :test, :development do
+  gem 'rspec-rails', '~> 2.13.0' # In order to have rspec tasks and generators
+  gem 'rspec-cells'
+end
 
 group :development do
-  gem 'therubyracer', '>= 0.8.2'
-  gem 'unicorn'
+  # gem 'custom_fields', path: '../gems/custom_fields' # for Developers
+  # gem 'custom_fields', github: 'locomotivecms/custom_fields'
+  # gem 'custom_fields', git: 'git://github.com/locomotivecms/custom_fields.git', branch: '2.0.0.rc' # Branch on Github
+
+  # gem 'locomotive-aloha-rails', path: '../gems/aloha-rails' # for Developers
+  # gem 'locomotive-tinymce-rails', path: '../gems/tinymce-rails' # for Developers
+  # gem 'locomotive_liquid', path: '../gems/liquid' # for Developers
+
+  # gem 'carrierwave-mongoid', git: 'git://github.com/locomotivecms/carrierwave-mongoid.git'
+
+  gem 'thor'
+  gem 'github_api'
+
+  gem 'unicorn' # Using unicorn_rails instead of webrick (default server)
+
 end
 
-# To use ActiveModel has_secure_password
-# gem 'bcrypt-ruby', '~> 3.0.0'
+group :test do
+  gem 'launchy'
 
-# To use Jbuilder templates for JSON
-# gem 'jbuilder'
+  gem 'cucumber-rails', require: false
 
-# Deploy with Capistrano
-# gem 'capistrano'
+  # gem 'autotest', platforms: :mri
+  # gem 'ZenTest', platforms: :mri
 
-# To use debugger
-# gem 'debugger'
+  gem 'poltergeist',        '~> 1.1.0'
+  gem 'shoulda-matchers',   '~> 1.5.2'
+
+  gem 'factory_girl_rails', '~> 4.2.1'
+  gem 'pickle'
+
+  gem 'capybara',           '~> 2.0.2'
+
+  gem 'json_spec'
+
+  gem 'database_cleaner'
+
+  gem 'mocha', '~> 0.13.0', require: false
+
+  # gem 'debugger', git: 'git://github.com/cldwalker/debugger.git'
+end
