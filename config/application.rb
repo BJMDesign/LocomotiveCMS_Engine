@@ -63,10 +63,8 @@ module BJMLocomotivecms
     config.assets.enabled = true
 
     # Version of your assets, change this if you want to expire all your assets
-    config.assets.version = '2.2.1'
+    config.assets.version = '2.3.b1'
 
-    # From Ruby 1.9.3, ActionMailer tests the SSL certificate by default but this does not exist for localhost
-    # This should be reenabled if switching to external SMTP
     ActionMailer::Base.smtp_settings = {
       :openssl_verify_mode  => 'none'
     }
